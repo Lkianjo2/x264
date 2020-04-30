@@ -437,8 +437,11 @@ int x264_cpu_num_processors( void )
     return sysconf( _SC_NPROCESSORS_ONLN );
 
 #elif SYS_LINUX
+
 #ifdef __ANDROID__
     // Android NDK does not expose sched_getaffinity
+    return sysconf( _SC_NPROCESSORS_CONF );
+#elif __QNX__
     return sysconf( _SC_NPROCESSORS_CONF );
 #else
     cpu_set_t p_aff;
