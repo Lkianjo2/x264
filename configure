@@ -542,7 +542,7 @@ done
 CC="${CC-${cross_prefix}gcc}"
 STRIP="${STRIP-${cross_prefix}strip}"
 INSTALL="${INSTALL-install}"
-PKGCONFIG="${PKGCONFIG-${cross_prefix}pkg-config}"
+#PKGCONFIG="${PKGCONFIG-${cross_prefix}pkg-config}"
 
 # ar and ranlib doesn't load the LTO plugin by default, prefer the gcc-prefixed wrappers which does.
 if ${cross_prefix}gcc-ar --version >/dev/null 2>&1; then
@@ -1266,8 +1266,8 @@ if [ "$avs" = "auto" ] ; then
     # AvxSynth currently only supports Linux and OSX
         avs="avxsynth"
         define HAVE_AVS
-        define USE_AVXSYNTH 1
-        AVS_LIBS="-ldl"
+        define USE_AVXSYNTH 1	
+        #AVS_LIBS="-ldl"
         LDFLAGSCLI="$AVS_LIBS $LDFLAGSCLI"
     fi
 fi
@@ -1369,7 +1369,7 @@ if [ "$opencl" = "yes" ]; then
     elif [ "$SYS" = "LINUX" -o "$SYS" = "MACOSX" ] ; then
         opencl="yes"
         define HAVE_OPENCL "(BIT_DEPTH==8)"
-        libdl="-ldl"
+        #libdl="-ldl"
     fi
     LDFLAGS="$LDFLAGS $libdl"
 fi
