@@ -410,6 +410,12 @@ else ifneq ($(SONAME),)
 	$(INSTALL) -m 755 $(SONAME) $(DESTDIR)$(libdir)
 endif
 
+install-bashcompletion:
+ifneq ($(BASHCOMPLETIONSDIR),)
+	$(INSTALL) -d $(DESTDIR)$(BASHCOMPLETIONSDIR)
+	$(INSTALL) -m 644 -T $(SRCPATH)/tools/bash-autocomplete.sh $(DESTDIR)$(BASHCOMPLETIONSDIR)/x264
+endif
+
 uninstall:
 	rm -f $(DESTDIR)$(includedir)/x264.h $(DESTDIR)$(includedir)/x264_config.h $(DESTDIR)$(libdir)/libx264.a
 	rm -f $(DESTDIR)$(bindir)/x264$(EXE) $(DESTDIR)$(libdir)/pkgconfig/x264.pc
@@ -417,6 +423,9 @@ ifneq ($(IMPLIBNAME),)
 	rm -f $(DESTDIR)$(bindir)/$(SONAME) $(DESTDIR)$(libdir)/$(IMPLIBNAME)
 else ifneq ($(SONAME),)
 	rm -f $(DESTDIR)$(libdir)/$(SONAME) $(DESTDIR)$(libdir)/libx264.$(SOSUFFIX)
+endif
+ifneq ($(BASHCOMPLETIONSDIR),)
+	rm -f $(DESTDIR)$(BASHCOMPLETIONSDIR)/x264
 endif
 
 etags TAGS:

@@ -65,6 +65,14 @@
 #include <ffms.h>
 #endif
 
+#if HAVE_GPAC
+#include <gpac/version.h>
+#endif
+
+#if HAVE_LSMASH
+#include <lsmash.h>
+#endif
+
 #ifdef _WIN32
 #define CONSOLE_TITLE_SIZE 200
 static wchar_t org_console_title[CONSOLE_TITLE_SIZE] = L"";
@@ -288,7 +296,7 @@ static int  parse( int argc, char **argv, x264_param_t *param, cli_opt_t *opt );
 static int  encode( x264_param_t *param, cli_opt_t *opt );
 
 /* logging and printing for within the cli system */
-static int cli_log_level;
+static int cli_log_level = X264_LOG_INFO;
 void x264_cli_log( const char *name, int i_level, const char *fmt, ... )
 {
     if( i_level > cli_log_level )
@@ -345,9 +353,17 @@ static void print_version_info( void )
 #if HAVE_FFMS
     printf( "(ffmpegsource %d.%d.%d.%d)\n", FFMS_VERSION >> 24, (FFMS_VERSION & 0xff0000) >> 16, (FFMS_VERSION & 0xff00) >> 8, FFMS_VERSION & 0xff );
 #endif
+#if HAVE_GPAC
+    printf( "(gpac " GPAC_FULL_VERSION ")\n" );
+#endif
+#if HAVE_LSMASH
+    printf( "(lsmash %d.%d.%d)\n", LSMASH_VERSION_MAJOR, LSMASH_VERSION_MINOR, LSMASH_VERSION_MICRO );
+#endif
     printf( "built on " __DATE__ ", " );
 #ifdef __INTEL_COMPILER
     printf( "intel: %.2f (%d)\n", __INTEL_COMPILER / 100.f, __INTEL_COMPILER_BUILD_DATE );
+#elif defined(__clang__)
+    printf( "clang: " __clang_version__ "\n" );
 #elif defined(__GNUC__)
     printf( "gcc: " __VERSION__ "\n" );
 #elif defined(_MSC_FULL_VER)
@@ -393,6 +409,7 @@ REALIGN_STACK int main( int argc, char **argv )
     _setmode( _fileno( stderr ), _O_BINARY );
 #endif
 
+    x264_param_default( &param );
     /* Parse command line */
     if( parse( argc, argv, &param, &opt ) < 0 )
         ret = -1;
@@ -419,6 +436,7 @@ REALIGN_STACK int main( int argc, char **argv )
         fclose( opt.tcfile_out );
     if( opt.qpfile )
         fclose( opt.qpfile );
+    x264_param_cleanup( &param );
 
 #ifdef _WIN32
     SetConsoleTitleW( org_console_title );
@@ -1412,16 +1430,6 @@ static int parse( int argc, char **argv, x264_param_t *param, cli_opt_t *opt )
     char *preset = NULL;
     char *tune = NULL;
 
-    x264_param_default( &defaults );
-    cli_log_level = defaults.i_log_level;
-
-    memset( &input_opt, 0, sizeof(cli_input_opt_t) );
-    memset( &output_opt, 0, sizeof(cli_output_opt_t) );
-    input_opt.bit_depth = 8;
-    input_opt.input_range = input_opt.output_range = param->vui.b_fullrange = RANGE_AUTO;
-    int output_csp = defaults.i_csp;
-    opt->b_progress = 1;
-
     /* Presets are applied before all other options. */
     for( optind = 0;; )
     {
@@ -1439,8 +1447,18 @@ static int parse( int argc, char **argv, x264_param_t *param, cli_opt_t *opt )
     if( preset && !strcasecmp( preset, "placebo" ) )
         b_turbo = 0;
 
-    if( x264_param_default_preset( param, preset, tune ) < 0 )
+    if( (preset || tune) && x264_param_default_preset( param, preset, tune ) < 0 )
         return -1;
+
+    x264_param_default( &defaults );
+    cli_log_level = defaults.i_log_level;
+
+    memset( &input_opt, 0, sizeof(cli_input_opt_t) );
+    memset( &output_opt, 0, sizeof(cli_output_opt_t) );
+    input_opt.bit_depth = 8;
+    input_opt.input_range = input_opt.output_range = param->vui.b_fullrange = RANGE_AUTO;
+    int output_csp = defaults.i_csp;
+    opt->b_progress = 1;
 
     /* Parse command line options */
     for( optind = 0;; )
